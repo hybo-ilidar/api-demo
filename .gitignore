@@ -4,24 +4,12 @@ tags
 *.o
 *.obj
 *.txt
+*.dat
+
 
 bin/*
-bin/linux/*
-bin/linux/amd64/*
-bin/linux/i386/*
-bin/macosx/*
-bin/win/*
-bin/win/x64/*
-bin/win/x86/*
 
 build/*
-build/linux/*
-build/linux/amd64/*
-build/linux/i386/*
-build/macosx/*
-build/win/*
-build/win/x64/*
-build/win/x86/*
 
 !.gitkeep
 

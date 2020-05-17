@@ -13,7 +13,8 @@
 
 #include "../include/ilidarlib.h"
 
-#define DEFAULT_BAUDRATE (921600)
+//#define DEFAULT_BAUDRATE (921600)
+#define DEFAULT_BAUDRATE (460800)
 #define DEFAULT_TIMEOUT (50000)
 
 #define MAXFILENAME (512)

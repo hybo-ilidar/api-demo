@@ -169,8 +169,8 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
   static bool synced = false;
   static bool isready = false;
   static uint32_t frameno = 0;
-  static int iframe = 0;
-  static int index = 0;
+  static uint32_t iframe = 0;
+  static uint32_t index = 0;
   static STATE state = NOSYNC;
   static STATE nextstate;
   static STATE laststate;

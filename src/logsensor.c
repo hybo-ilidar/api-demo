@@ -14,7 +14,8 @@
 #include "ilidarlib.h"
 
 
-#define DEFAULT_BAUDRATE (921600)
+//#define DEFAULT_BAUDRATE (921600)
+#define DEFAULT_BAUDRATE (460800)
 #define DEFAULT_TIMEOUT (50000)
 
 #define MAXFILENAME (512)
@@ -24,8 +25,6 @@ char fnamelog[MAXFILENAME];
 #define MAX_PINGPONG_FRAMES (16)
 extern HIL_FRAME frame, framebuf1[MAX_PINGPONG_FRAMES], framebuf2[MAX_PINGPONG_FRAMES];
 int main(int argc, char *argv[]) {
-  int err;
-  int i;
   int iarg=0;
 
   char portname[HIL_MAXNAMESIZE];
@@ -53,13 +52,15 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,"note:\n");
     fprintf(stderr,"  these are the currently connected serial ports:\n" );
     hil_port_enumerate(stderr);
-    fprintf(stderr, "size of   payload type: %10lu %8lx\n", HIL_PAYLOADSIZE, HIL_PAYLOADSIZE );
-    fprintf(stderr, "size of     frame type: %10ld %8lx\n", HIL_FRAMESIZE,   HIL_FRAMESIZE );
-    fprintf(stderr, "size of     frame  var: %10ld %8lx\n", (uint32_t)sizeof(frame), (uint32_t)sizeof(frame) );
+#if 0
+    fprintf(stderr, "size of   payload type: %10u %8ux\n", HIL_PAYLOADSIZE, HIL_PAYLOADSIZE );
+    fprintf(stderr, "size of     frame type: %10u %8ux\n", HIL_FRAMESIZE,   HIL_FRAMESIZE );
+    fprintf(stderr, "size of     frame  var: %10u %8ux\n", (uint32_t)sizeof(frame), (uint32_t)sizeof(frame) );
     fprintf(stderr, "no.  frames per buffer: %10d\n", MAX_PINGPONG_FRAMES );
-    fprintf(stderr, "size of      framebuf1: %10ld %8lx\n", (uint32_t)sizeof(framebuf1), (uint32_t)sizeof(framebuf1) );
-    fprintf(stderr, "size of      framebuf2: %10ld %8lx\n", (uint32_t)sizeof(framebuf1), (uint32_t)sizeof(framebuf1) );
-    fprintf(stderr, "calc size of  framebuf: %10ld %8lx\n", HIL_FRAMESIZE*MAX_PINGPONG_FRAMES, HIL_FRAMESIZE*MAX_PINGPONG_FRAMES );
+    fprintf(stderr, "size of      framebuf1: %10u %8ux\n", (uint32_t)sizeof(framebuf1), (uint32_t)sizeof(framebuf1) );
+    fprintf(stderr, "size of      framebuf2: %10u %8ux\n", (uint32_t)sizeof(framebuf1), (uint32_t)sizeof(framebuf1) );
+    fprintf(stderr, "calc size of  framebuf: %10u %8ux\n", HIL_FRAMESIZE*MAX_PINGPONG_FRAMES, HIL_FRAMESIZE*MAX_PINGPONG_FRAMES );
+#endif
     exit(1);
   }
 
