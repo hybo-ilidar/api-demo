@@ -74,7 +74,7 @@ endif
 
 .PHONY: directories
 
-all: directories logsensor rdsensor # rdsensor_t
+all: directories logsensor rdsensor sensor2csv # rdsensor_t
 
 directories: $(BIN) $(BUILD)
 
@@ -85,6 +85,10 @@ logsensor: $(SRC)/logsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
 rdsensor: $(SRC)/rdsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
 	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
 		$(EXESWITCH) $(BIN)$(SLASH)rdsensor$(EXE)
+
+sensor2csv: $(SRC)/sensor2csv.c $(SRC)/ilidarlib.c  | $(BUILD)
+	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)sensor2csv.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
+		$(EXESWITCH) $(BIN)$(SLASH)sensor2csv$(EXE)
 
 ### rdsensor_t: $(SRC)/rdsensor_t.cpp $(SRC)/ilidarlib.c  | $(BUILD)
 ### 	$(CPP) $(CPPVER) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor_t.cpp $(SRC)$(SLASH)ilidarlib.cpp \
@@ -100,6 +104,7 @@ $(BUILD):
 clean:
 	$(RM) $(BIN)$(SLASH)logsensor$(EXE) $(ERR2NULL)
 	$(RM) $(BIN)$(SLASH)rdsensor$(EXE) $(ERR2NULL)
+	$(RM) $(BIN)$(SLASH)sensor2csv$(EXE) $(ERR2NULL)
 	# $(RM) $(BIN)$(SLASH)rdsensor_t$(EXE) $(ERR2NULL)
 	$(RM) $(BUILD)$(SLASH)*.obj $(ERR2NULL)
 	$(RM) $(BUILD)$(SLASH)*.o $(ERR2NULL)
@@ -108,6 +113,7 @@ exec:
 ifneq ($(THIS_OS),WIN32)
 	chmod +x $(BIN)/logsensor
 	chmod +x $(BIN)/rdsensor
+	chmod +x $(BIN)/sensor2csv
 	#chmod +x $(BIN)/rdsensor_t
 endif
 

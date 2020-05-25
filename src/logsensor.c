@@ -52,14 +52,14 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,"note:\n");
     fprintf(stderr,"  these are the currently connected serial ports:\n" );
     hil_port_enumerate(stderr);
-#if 0
-    fprintf(stderr, "size of   payload type: %10u %8ux\n", HIL_PAYLOADSIZE, HIL_PAYLOADSIZE );
-    fprintf(stderr, "size of     frame type: %10u %8ux\n", HIL_FRAMESIZE,   HIL_FRAMESIZE );
-    fprintf(stderr, "size of     frame  var: %10u %8ux\n", (uint32_t)sizeof(frame), (uint32_t)sizeof(frame) );
+#if 1
+    fprintf(stderr, "size of   payload type: %10zd %8zx\n", HIL_PAYLOADSIZE, HIL_PAYLOADSIZE );
+    fprintf(stderr, "size of     frame type: %10zd %8zx\n", HIL_FRAMESIZE,   HIL_FRAMESIZE );
+    fprintf(stderr, "size of     frame  var: %10zd %8zx\n", sizeof(frame), sizeof(frame) );
     fprintf(stderr, "no.  frames per buffer: %10d\n", MAX_PINGPONG_FRAMES );
-    fprintf(stderr, "size of      framebuf1: %10u %8ux\n", (uint32_t)sizeof(framebuf1), (uint32_t)sizeof(framebuf1) );
-    fprintf(stderr, "size of      framebuf2: %10u %8ux\n", (uint32_t)sizeof(framebuf1), (uint32_t)sizeof(framebuf1) );
-    fprintf(stderr, "calc size of  framebuf: %10u %8ux\n", HIL_FRAMESIZE*MAX_PINGPONG_FRAMES, HIL_FRAMESIZE*MAX_PINGPONG_FRAMES );
+    fprintf(stderr, "size of      framebuf1: %10zd %8zx\n", sizeof(framebuf1), sizeof(framebuf1) );
+    fprintf(stderr, "size of      framebuf2: %10zd %8zx\n", sizeof(framebuf1), sizeof(framebuf1) );
+    fprintf(stderr, "calc size of  framebuf: %10zd %8zx\n", HIL_FRAMESIZE*MAX_PINGPONG_FRAMES, HIL_FRAMESIZE*MAX_PINGPONG_FRAMES );
 #endif
     exit(1);
   }

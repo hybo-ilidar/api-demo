@@ -117,7 +117,7 @@ typedef struct tagHIL_PAYLOAD {
   int16_t pts[HIL_MAXPOINTS][3];
   uint32_t cksum;
 } HIL_PAYLOAD;
-#define HIL_PAYLOADSIZE ( (uint32_t)sizeof( HIL_PAYLOAD ) )
+#define HIL_PAYLOADSIZE ( sizeof( HIL_PAYLOAD ) )
 
 typedef struct tagHIL_FRAME {
   uint8_t sync[HIL_FRAME_SIZEOF_SYNC];
@@ -127,7 +127,7 @@ typedef struct tagHIL_FRAME {
     HIL_PAYLOAD p;
   };
 } HIL_FRAME;
-#define HIL_FRAMESIZE ( (uint32_t)sizeof( HIL_FRAME ) )
+#define HIL_FRAMESIZE ( sizeof( HIL_FRAME ) )
 
 //================================================
 // enumerations
