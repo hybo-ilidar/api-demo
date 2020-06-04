@@ -411,9 +411,36 @@ int hil_serialOpen(HIL_PORT *hp, char port[], int baud) {
    enum sp_return err;
    err = sp_get_port_by_name(port,&(hp->sp_handle));
    if (err!=SP_OK) return (err);
+  //------------------------------------------------
+  // set port to read/write 
+  //------------------------------------------------
    err = sp_open(hp->sp_handle,SP_MODE_READ_WRITE);
    if (err!=SP_OK) return (err);
+  //------------------------------------------------
+  // baud rate
+  //------------------------------------------------
    err = sp_set_baudrate(hp->sp_handle, baud);
+  if (err!=SP_OK) return (err);
+  //------------------------------------------------
+  // parity (may be used when doing configuration and f/w updates)
+  //------------------------------------------------
+  //   SP_PARITY_NONE  No parity.
+  //   SP_PARITY_ODD   Odd parity.  
+  //   SP_PARITY_EVEN  Even parity.
+  //   SP_PARITY_MARK  Mark parity.
+  //   SP_PARITY_SPACE   Space parity.
+  err = sp_set_parity(hp->sp_handle, SP_PARITY_NONE);
+  if (err!=SP_OK) return (err);
+  //------------------------------------------------
+  // flow control
+  //------------------------------------------------
+  // SP_FLOWCONTROL_NONE  No flow control.  
+  // SP_FLOWCONTROL_XONXOFF  Software flow control using XON/XOFF characters.
+  // SP_FLOWCONTROL_RTSCTS   Hardware flow control using RTS/CTS signals.  
+  // SP_FLOWCONTROL_DTRDSR   Hardware flow control using DTR/DSR signals.
+   err = sp_set_flowcontrol(hp->sp_handle, SP_FLOWCONTROL_NONE);
+   if (err!=SP_OK) return (err);
+
    return (err);
 }
 
