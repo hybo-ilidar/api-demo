@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,"note:\n");
     fprintf(stderr,"  these are the currently connected serial ports:\n" );
     hil_port_enumerate(stderr);
-#if 1
+#if 0
     fprintf(stderr, "size of   payload type: %10zd %8zx\n", HIL_PAYLOADSIZE, HIL_PAYLOADSIZE );
     fprintf(stderr, "size of     frame type: %10zd %8zx\n", HIL_FRAMESIZE,   HIL_FRAMESIZE );
     fprintf(stderr, "size of     frame  var: %10zd %8zx\n", sizeof(frame), sizeof(frame) );

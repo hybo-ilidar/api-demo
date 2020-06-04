@@ -184,7 +184,7 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
     nrb=hil_serialReadBlock(hp, buf, 200, BUFSIZE, &finished);
     //printf("%d ",nrb);
     for(int i=0;i<nrb;i++) { // Grabber
-      // fprintf(stderr,"nrb, buf[%d]: %d %02x\n", i, nrb, buf[i]);
+      if(vb) fprintf(stderr,"nrb, buf[%d]: %d %02x\n", i, nrb, buf[i]);
       ch = buf[i];
       counter_incr( BYTES ); // number of total bytes
       cksum += ch; // overall checksum
@@ -194,6 +194,7 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
           if (firstsync) counter_incr(LOSTSYNCS);
         case SYNCSEARCH0:
           if (ch == 0x5A) {
+            frame.sync[0] = ch;
             nextstate = SYNCSEARCH1;
           }
           else {
@@ -203,23 +204,26 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
           break;
         case SYNCSEARCH1:
           if (ch == 0xA5) {
+            frame.sync[1] = ch;
             nextstate = SYNCSEARCH2;
           }
           else nextstate = NOSYNC;
           break;
         case SYNCSEARCH2:
           if (ch == 0x5A) {
+            frame.sync[2] = ch;
             nextstate = SYNCSEARCH3;
           }
           else nextstate = NOSYNC;
           break;
         case SYNCSEARCH3:
           if (ch == 0xA5) {
+            frame.sync[3] = ch;
             nextstate = GETSIZE;
             counter_incr(GOODSYNCS);
             firstsync = true;
             synced = true;
-            // fprintf(stderr, "sync found\n");
+            if(vb) fprintf(stderr, "sync found\n");
           }
           else nextstate = NOSYNC;
           break;
@@ -235,7 +239,7 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
             // but are required fields and still checked here
             // RCLOTT 19 Feb 2020, final production protocol design
             // frame.size = frame.size;
-            // fprintf(stderr, "frame size read, actual: %d, %d\n", frame.size, (int)HIL_PAYLOADSIZE );
+            if(vb) fprintf(stderr, "frame size read, actual: %d, %d\n", frame.size, (int)HIL_PAYLOADSIZE );
             if (frame.size != HIL_PAYLOADSIZE) {
               nextstate = SYNCSEARCH0;
               synced = false;
@@ -256,7 +260,7 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
             nextstate = GETDATA;
             // clear the payload, but don't wipe out the seq number...
             memset(frame.data+HIL_FRAME_SIZEOF_SEQ, 0, HIL_PAYLOADSIZE-HIL_FRAME_SIZEOF_SEQ);
-            // fprintf(stderr, "frame seq: %04x\n", frame.p.seq);
+            if(vb) fprintf(stderr, "frame seq: %04x\n", frame.p.seq);
           }
           break;
         case GETDATA:
@@ -277,14 +281,25 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
           frame.p.cksum = (ch<<(index*8)) + frame.p.cksum;
           index++;
           if (index >= HIL_FRAME_SIZEOF_CKSUM) {
-            // fprintf(stderr, "cksum, frame: %08x calc: %08x\n", frame.p.cksum, cksum2);
-            if( frame.p.cksum == cksum2 ) {
+            if(vb) fprintf(stderr, "cksum, frame: %08x calc: %08x\n", frame.p.cksum, cksum2);
+            if( frame.p.cksum == cksum2  || true ) { //******* DEBUG NO CHECKSUM CHECK *******//
               isready = true;
               counter_incr(FRAMES );
             } else {
               counter_incr(ERRCKSUM);
             }
             nextstate = SYNCSEARCH0;
+#if 0
+            //************************
+            // debugging:  dump a frame and stop
+            FILE *fpdebug = fopen("debug-frame.bin", "wb");
+            if(fpdebug) {
+              fwrite( (void *)&frame, sizeof(frame), 1, fpdebug );
+              fclose( fpdebug );
+            }
+            exit(0);
+            //************************
+#endif
           }
           break;
         default:
@@ -304,10 +319,22 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
 
       if (isready) {
         frameno = counter_get_value(FRAMES);
-        // fprintf(stderr, "GOOD, frame %d\tcksum: %04x\tcalc: %04x\n", frameno, frame.p.cksum, cksum2 );
+        if(vb) fprintf(stderr, "GOOD, frame %d\tcksum: %04x\tcalc: %04x\n", frameno, frame.p.cksum, cksum2 );
         memcpy(pf + iframe, &frame, sizeof(frame)); 
         iframe += 1;
         if (iframe >= MAX_PINGPONG_FRAMES) { // flip the ping-pong buffers...
+#if 0
+            //************************
+            // debugging:  dump a buffer and stop
+            FILE *fpdebug = fopen("debug-buffer.bin", "wb");
+            if(fpdebug) {
+              fwrite( (void *)pf, sizeof(frame), MAX_PINGPONG_FRAMES, fpdebug );
+              fclose( fpdebug );
+            }
+            exit(0);
+            //************************
+#endif
+
           if (pfread == NULL) { // only flip if other buffer has been emptied
             if (pf == framebuf1) {
               pf = framebuf2;
@@ -318,7 +345,7 @@ void hil_frame_grabber( HIL_PORT *hp, GRABBER_ACTION action ) {
             }
           } else { // otherwise, write overrun, lose a buffer
             counter_incr(WRITE_OVERRUN);
-            //fprintf(stderr, "overrun: %d\n", counter_get_value(WRITE_OVERRUN) );
+            if(vb) fprintf(stderr, "overrun: %d\n", counter_get_value(WRITE_OVERRUN) );
           }
           iframe = 0;
         }
@@ -447,7 +474,7 @@ int hil_serialReadBlock(HIL_PORT *hp, unsigned char * dst, int size, int maxsize
   nqueued=waiting; // save how many bytes are on the queue
   if(waiting > maxsize) waiting = maxsize;
   nrb = sp_nonblocking_read( hp->sp_handle, dst, waiting );
-  // fprintf(stderr,"waiting, nrp: %d\t%d\n", waiting, nrb);
+  if(vb) fprintf(stderr,"waiting, nrp: %d\t%d\n", waiting, nrb);
   return nrb;
 }
 
