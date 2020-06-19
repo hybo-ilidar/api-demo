@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -18,9 +19,6 @@
 #define DEFAULT_BAUDRATE (460800)
 #define DEFAULT_TIMEOUT (50000)
 
-#define MAXFILENAME (512)
-FILE *fplog=NULL;
-char fnamelog[MAXFILENAME];
 
 
 
@@ -29,13 +27,30 @@ extern HIL_FRAME frame, framebuf1[MAX_PINGPONG_FRAMES], framebuf2[MAX_PINGPONG_F
 void write_frame_csv( FILE *fpout, HIL_FRAME *hfp );
 void write_frame_oneshot_csv( FILE *fpout, HIL_FRAME *hfp );
 
+void print_help(void) {
+  fprintf(stderr,"Usage:\n");
+  fprintf(stderr,"  sensor2csv serial-port csv-file-name [-n nframes] [-b baud]\n");
+  fprintf(stderr,"Where:\n");
+  fprintf(stderr,"  serial-port     port which iLidar is connected, e.g., /dev/ttyUSB0 or COM5\n");
+  fprintf(stderr,"  csv-file-name   output file, default is stdout\n");
+  fprintf(stderr,"  nframes         number frames to write, default=1\n");
+  fprintf(stderr,"  baudrate        serial port baud, default=480600\n");
+  fprintf(stderr,"Note:\n");
+  fprintf(stderr,"  these are the currently connected serial ports:\n" );
+  hil_port_enumerate(stderr);
+}
+
 int main(int argc, char *argv[]) {
   int iarg=0;
 
+  FILE *fplog=NULL;
+  char fnamelog[HIL_MAXNAMESIZE];
   char portname[HIL_MAXNAMESIZE];
+
   int nframes=DEFAULT_NFRAMES;
   int baud=DEFAULT_BAUDRATE;
   int tout=DEFAULT_TIMEOUT;
+
   int logsize=0;
   int llogsize=0;
   int max_sizeKB = 2048;
@@ -44,88 +59,100 @@ int main(int argc, char *argv[]) {
   HIL_PORT hil_port;
   HIL_PORT *hp=NULL;
 
+//------------------------------------------------------------------------
+// Command line argument processing (using getopt_long)
+//------------------------------------------------------------------------
+  int c;
+  static struct option long_options[] = {
+    {"baud",       required_argument,   0, 'b'},
+    {"mode",       required_argument,   0, 'm'},
+    {"numframes",  required_argument,   0, 'n'},
+    {"timeout",    required_argument,   0, 't'},
+    {"help",       no_argument,         0, 'h'},
+    {0, 0, 0, 0}
+  };
 
-//------------------------------------------------------------------------
-// Command line argument processing
-//------------------------------------------------------------------------
-// At the least, we need a serial port name.
-// If no arguments, show program usage
-// and list available serial ports
-  iarg=0;
-  if (argc<2) {
-    fprintf(stderr,"Usage:\n");
-    fprintf(stderr,"  sensor2csv serial-port csv-file-name [nframes] [baud]\n");
-    fprintf(stderr,"Where:\n");
-    fprintf(stderr,"  serial-port     port which iLidar is connected, e.g., /dev/ttyUSB0 or COM5\n");
-    fprintf(stderr,"  csv-file-name   output file, - for stdout\n");
-    fprintf(stderr,"  nframes         number frames to write, default=1\n");
-    fprintf(stderr,"  baudrate        serial port baud, default=480600\n");
-    fprintf(stderr,"Note:\n");
-    fprintf(stderr,"  these are the currently connected serial ports:\n" );
-    hil_port_enumerate(stderr);
-    exit(1);
+  baud = DEFAULT_BAUDRATE;
+  nframes = DEFAULT_NFRAMES;
+  tout = DEFAULT_TIMEOUT;
+  char *endptr=NULL;
+
+  while (1) {
+    int option_index = 0; // getopt_long stores option index here
+    c = getopt_long (argc, argv, "b:m:n:h", long_options, &option_index);
+    if (c == -1) break; // Detect the end of the options.
+    switch (c) {
+      case 0:
+        if (long_options[option_index].flag != 0) break;
+        printf ("option %s", long_options[option_index].name);
+        if (optarg) printf (" with arg %s", optarg);
+        printf ("\n");
+        break;
+      case 'b':
+        endptr=NULL;
+        errno=0;
+        fprintf(stderr, "baud string: %%s\n", optarg);
+        baud = (int)strtol( optarg, &endptr, 10 );
+        if(endptr == optarg) {
+          fprintf(stderr,"error reading baudrate: %s\n", optarg );
+          exit(99);
+        }
+        break;
+      case 'm':
+        fprintf(stderr, "TBD: port mode option, value %s\n", optarg);
+        break;
+      case 'h':
+        print_help();
+        exit(0);
+        break;
+      case 'n':
+        endptr=NULL;
+        errno=0;
+        fprintf(stderr, "nframes: %s\n", optarg);
+        nframes = (int)strtol( optarg, &endptr, 10 );
+        if(endptr == optarg) {
+          fprintf(stderr,"error reading nframes: %s\n", argv[iarg] );
+          exit(99);
+        }
+        break;
+      case 't': // get optional timeout
+        endptr=NULL;
+        errno=0;
+        fprintf(stderr, "timeout string: %s\n", optarg);
+        tout = (int)strtol( optarg, &endptr, 10 );
+        if(endptr == argv[iarg]) {
+          fprintf(stderr,"error reading timeout: %s\n", optarg );
+          exit(99);
+        }
+      case '?':
+        // getopt_long already printed an error message.
+        break;
+      default:
+        exit(99);
+    }
   }
 
-// get serial port 
-  iarg++;
-  strncpy( portname, argv[iarg], HIL_MAXNAMESIZE );
 
-// get logfile name 
-  iarg++;
-  strncpy( fnamelog, argv[iarg], MAXFILENAME );
-  if( 0==strncmp( "-", fnamelog, MAXFILENAME ) ) {
-    fplog = stdout;
+  //if (verbose_flag) puts ("verbose flag is set");
+
+  // handle positional arguments
+  if (optind < argc) {
+    strncpy(portname, argv[optind++], HIL_MAXNAMESIZE);
   } else {
+    fprintf(stderr, "Must specify a serial port\n");
+    print_help();
+    exit(99);
+  }
+
+  if (optind < argc) {
+    strncpy( fnamelog, argv[optind++], HIL_MAXNAMESIZE );
     fplog=fopen( fnamelog, "w" );
     if(!fplog) {
       fprintf(stderr, "Error opening output capture file: %s\n", fnamelog);
       exit(99);
     }
-  }
-
-// get optional number of frames to write
-  iarg++;
-  if (argc>iarg) {
-    char *endptr=NULL;
-    errno=0;
-    fprintf(stderr, "nframes: %d, %s\n", iarg, argv[iarg]);
-    nframes = (int)strtol( argv[iarg], &endptr, 10 );
-    if(endptr == argv[iarg]) {
-      fprintf(stderr,"error reading nframes: %s\n", argv[iarg] );
-      exit(99);
-    }
   } else {
-    nframes = DEFAULT_NFRAMES;
-  }
-
-// get optional baudrate
-  iarg++;
-  if (argc>iarg) {
-    char *endptr=NULL;
-    errno=0;
-    fprintf(stderr, "baud string: %d, %s\n", iarg, argv[iarg]);
-    baud = (int)strtol( argv[iarg], &endptr, 10 );
-    if(endptr == argv[iarg]) {
-      fprintf(stderr,"error reading baudrate: %s\n", argv[iarg] );
-      exit(99);
-    }
-  } else {
-    baud = DEFAULT_BAUDRATE;
-  }
-
-// get optional timeout (only works if baud rate is specified)
-  iarg++;
-  if (argc>iarg) {
-    char *endptr=NULL;
-    errno=0;
-    fprintf(stderr, "timeout string: %d, %s\n", iarg, argv[iarg]);
-    tout = (int)strtol( argv[iarg], &endptr, 10 );
-    if(endptr == argv[iarg]) {
-      fprintf(stderr,"error reading timeout: %s\n", argv[iarg] );
-      exit(99);
-    }
-  } else {
-    tout = DEFAULT_TIMEOUT;
+    fplog = stdout;
   }
 
 //------------------------------------------------------------------------
@@ -189,23 +216,25 @@ void write_frame_csv( FILE *fpout, HIL_FRAME *hfp ) {
   //         hfp->p.timePeak.seconds, hfp->p.timePeak.micros,
   //         hfp->p.timeIMU.seconds, hfp->p.timeIMU.micros );
   // fprintf(fplog, "20200525-000000" ); // TODO put the real date-time here
-  fprintf(fplog, "%d.%06d,", hfp->p.timePeak.seconds, hfp->p.timePeak.micros ); 
+  fprintf(fpout, "%d.%06d,", hfp->p.timePeak.seconds, hfp->p.timePeak.micros ); 
   for(int k=0; k<HIL_MAXPOINTS; k++) {
-    fprintf(fplog, "%.3lf,%.3lf,%.3lf",
+    fprintf(fpout, "%.3lf,%.3lf,%.3lf",
             (float)hfp->p.pts[k][0]/1000.0f, 
             (float)hfp->p.pts[k][1]/1000.0f, 
             (float)hfp->p.pts[k][2]/1000.0f);
   }
-  fprintf(fplog, "\n");
+  fprintf(fpout, "\n");
 }
 
 const char csv_oneshot_header[] = "x0,y0,z0";
 void write_frame_oneshot_csv( FILE *fpout, HIL_FRAME *hfp ) {
   fprintf(fpout, "%s\n", csv_oneshot_header);
   for(int k=0; k<HIL_MAXPOINTS; k++) {
-    fprintf(fplog, "%.3lf,%.3lf,%.3lf\n",
+    fprintf(fpout, "%.3lf,%.3lf,%.3lf\n",
             (float)hfp->p.pts[k][0]/1000.0f, 
             (float)hfp->p.pts[k][1]/1000.0f, 
             (float)hfp->p.pts[k][2]/1000.0f);
   }
 }
+
+

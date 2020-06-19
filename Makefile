@@ -67,7 +67,7 @@ else
   MKDIR=mkdir -p
 	OBJLOC=
 	INCLUDES=-I$(INC)
-  LIBSWITCH=-l
+  LIBSWITCH=-L/usr/local/lib -l
 	LIBSERIAL=serialport
 endif
 
