@@ -3,13 +3,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <string.h>
 #include <errno.h>
-#include <getopt.h>
+#include <time.h>
 
 #ifdef _WIN32
 #include <Windows.h>
+#include "ya_getopt.h"
+#define strncasecmp _strnicmp
 #else
 #include <unistd.h>
+#include <getopt.h>
 #endif
 
 #include "ilidarlib.h"
@@ -59,16 +63,27 @@ int main(int argc, char *argv[]) {
   HIL_PORT hil_port;
   HIL_PORT *hp=NULL;
 
-//------------------------------------------------------------------------
-// Command line argument processing (using getopt_long)
-//------------------------------------------------------------------------
+  time_t now;
+  struct tm* nowtm;
+  char datetime[HIL_MAXNAMESIZE];
+
+  // This generates an automatic filename based on time and date
+  now = time(NULL);
+  nowtm = localtime(&now);
+  strftime(datetime, HIL_MAXNAMESIZE, "%Y%m%d-%H%M%S.csv", nowtm);
+  // printf("Time string: %s\n", datetime);
+
+
+  //------------------------------------------------------------------------
+  // Command line argument processing (using getopt_long)
+  //------------------------------------------------------------------------
   int c;
-  static struct option long_options[] = {
-    {"baud",       required_argument,   0, 'b'},
-    {"mode",       required_argument,   0, 'm'},
-    {"numframes",  required_argument,   0, 'n'},
-    {"timeout",    required_argument,   0, 't'},
-    {"help",       no_argument,         0, 'h'},
+  struct option long_options[] = {
+    {"baud",       required_argument,   NULL, 'b'},
+    {"mode",       required_argument,   NULL, 'm'},
+    {"numframes",  required_argument,   NULL, 'n'},
+    {"timeout",    required_argument,   NULL, 't'},
+    {"help",       no_argument,         NULL, 'h'},
     {0, 0, 0, 0}
   };
 
@@ -146,6 +161,10 @@ int main(int argc, char *argv[]) {
 
   if (optind < argc) {
     strncpy( fnamelog, argv[optind++], HIL_MAXNAMESIZE );
+    if( 0 == strncasecmp( fnamelog, "auto", HIL_MAXNAMESIZE )) {
+      // if user speficies "auto", filename will be date/time.csv
+      strncpy( fnamelog, datetime, HIL_MAXNAMESIZE );
+    }
     fplog=fopen( fnamelog, "w" );
     if(!fplog) {
       fprintf(stderr, "Error opening output capture file: %s\n", fnamelog);
@@ -163,7 +182,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,"Error connecting to sensor on port: %s\n", portname );
     fprintf(stderr,"These are the currently connected serial ports:\n" );
     hil_port_enumerate(stderr);
-    exit(99);
+		exit(0);
   } else {
     fprintf(stderr,"Connected to sensor, port %s at %d baud with timeout %d msec\n", portname, baud, tout);
   }
@@ -236,5 +255,6 @@ void write_frame_oneshot_csv( FILE *fpout, HIL_FRAME *hfp ) {
             (float)hfp->p.pts[k][2]/1000.0f);
   }
 }
+
 
 

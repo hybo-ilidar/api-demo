@@ -39,38 +39,70 @@ INC = include
 BIN = bin
 BUILD = build
 LIBPROJ = lib
+
+LIBS = 
+CCFLAGS =
+INCLUDES =
+DEFINES =
+
 ifeq ($(THIS_OS),WIN32)
-	PATHSEP2=\\
+  COMPILE=/c
+  PATHSEP2=\\
   SLASH=$(strip $(PATHSEP2))
-	CC=cl
-	CPP=cl
+  CC=cl
+  CPP=cl
   CPPVER=/std:c++17
-	RM=del /f /q
+  RM=del /f /q
   EXESWITCH=/Fe:
-	EXE=.exe
+  EXE=.exe
+  OBJ=.obj
   ERR2NULL=2>nul
   MKDIR=mkdir
-	OBJLOC=/Fo: $(BUILD)$(SLASH) 
-	INCLUDES=/I $(INC)
-  LIBSWITCH=
-	#LIBSERIAL=$(LIBPROJ)$(SLASH)serial$(SLASH)libserialport.lib
-	LIBSERIAL=..$(SLASH)serial-sigrok$(SLASH)x64$(SLASH)Release$(SLASH)libserialport.lib
+  OBJLOC=/Fo:
+  INCLUDES=/I $(INC)
+  SRC_GETOPT=ya_getopt.c
+  LIBS = ..\serial-sigrok\x64\Release\libserialport.lib
+
+
+
+
+
 else
-	PATHSEP2=/
+  COMPILE=-c
+  PATHSEP2=/
   SLASH=$(strip $(PATHSEP2))
   CC=gcc
-	CPP=g++
+  CPP=g++
   RM=rm -f
-	EXE=
+  EXE=
+  OBJ=.o
   EXESWITCH=-o
   ERR2NULL=
   MKDIR=mkdir -p
-	OBJLOC=
-	INCLUDES=-I$(INC)
-  LIBSWITCH=-L/usr/local/lib -l
-	LIBSERIAL=serialport
+  OBJLOC=-o
+  INCLUDES=-I$(INC)
+  SRC_GETOPT=
+  LIBS += -L/usr/local/lib -lserialport
 endif
 
+SOURCES  = logsensor.c 
+SOURCES += ilidarlib.c
+OBJS_LOGSENSOR := $(SOURCES:%.c=$(BUILD)$(SLASH)%$(OBJ))
+$(info SOURCES is $(SOURCES))
+$(info OBJS_LOGSENSOR is $(OBJS_LOGSENSOR))
+
+SOURCES  = rdsensor.c 
+SOURCES += ilidarlib.c
+OBJS_RDSENSOR := $(SOURCES:%.c=$(BUILD)$(SLASH)%$(OBJ))
+$(info SOURCES is $(SOURCES))
+$(info OBJS_RDSENSOR is $(OBJS_RDSENSOR))
+
+SOURCES  = sensor2csv.c 
+SOURCES += ilidarlib.c
+SOURCES += $(SRC_GETOPT)
+OBJS_SENSOR2CSV := $(SOURCES:%.c=$(BUILD)$(SLASH)%$(OBJ))
+$(info SOURCES is $(SOURCES))
+$(info OBJS_SENSOR2CSV is $(OBJS_SENSOR2CSV))
 
 .PHONY: directories
 
@@ -78,17 +110,28 @@ all: directories logsensor rdsensor sensor2csv # rdsensor_t
 
 directories: $(BIN) $(BUILD)
 
-logsensor: $(SRC)/logsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
-	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)logsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
-		$(EXESWITCH) $(BIN)$(SLASH)logsensor$(EXE)
 
-rdsensor: $(SRC)/rdsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
-	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
-		$(EXESWITCH) $(BIN)$(SLASH)rdsensor$(EXE)
+sensor2csv: $(OBJS_SENSOR2CSV) | $(BIN)
+	$(CC) $^ $(EXESWITCH) $(BIN)$(SLASH)sensor2csv$(EXE) $(LIBS)
 
-sensor2csv: $(SRC)/sensor2csv.c $(SRC)/ilidarlib.c  | $(BUILD)
-	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)sensor2csv.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
-		$(EXESWITCH) $(BIN)$(SLASH)sensor2csv$(EXE)
+logsensor: $(OBJS_SENSOR2CSV) | $(BIN)
+	$(CC) $^ $(EXESWITCH) $(BIN)$(SLASH)logsnsor$(EXE) $(LIBS)
+
+rdsensor: $(OBJS_SENSOR2CSV) | $(BIN)
+	$(CC) $^ $(EXESWITCH) $(BIN)$(SLASH)rdsensor$(EXE) $(LIBS)
+
+
+$(BUILD)$(SLASH)%$(OBJ): $(SRC)$(SLASH)%.c | $(BUILD)
+	$(CC) $(DEFINES) $(INCLUDES) $(OBJLOC) $@ $(COMPILE) $<
+
+
+##  logsensor: $(SRC)/logsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
+##  	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)logsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
+##  		$(EXESWITCH) $(BIN)$(SLASH)logsensor$(EXE)
+##  
+##  rdsensor: $(SRC)/rdsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
+##  	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
+##  		$(EXESWITCH) $(BIN)$(SLASH)rdsensor$(EXE)
 
 ### rdsensor_t: $(SRC)/rdsensor_t.cpp $(SRC)/ilidarlib.c  | $(BUILD)
 ### 	$(CPP) $(CPPVER) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor_t.cpp $(SRC)$(SLASH)ilidarlib.cpp \
