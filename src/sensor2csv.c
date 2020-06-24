@@ -161,9 +161,13 @@ int main(int argc, char *argv[]) {
 
   if (optind < argc) {
     strncpy( fnamelog, argv[optind++], HIL_MAXNAMESIZE );
-    if( 0 == strncasecmp( fnamelog, "auto", HIL_MAXNAMESIZE )) {
-      // if user speficies "auto", filename will be date/time.csv
+    if( 0 == strncasecmp( fnamelog, "time", HIL_MAXNAMESIZE )) {
+      // if user speficies "time", filename will be date/time.csv
       strncpy( fnamelog, datetime, HIL_MAXNAMESIZE );
+    }
+    if( 0 == strncasecmp( fnamelog, "default", HIL_MAXNAMESIZE )) {
+      // if user speficies "default", filename will be ilidardata.csv
+      strncpy( fnamelog, "ilidardata.csv", HIL_MAXNAMESIZE );
     }
     fplog=fopen( fnamelog, "w" );
     if(!fplog) {
