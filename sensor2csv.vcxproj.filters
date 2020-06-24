@@ -21,6 +21,9 @@
     <ClCompile Include="src\sensor2csv.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ya_getopt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ilidarlib.h">
@@ -30,6 +33,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ya_getopt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

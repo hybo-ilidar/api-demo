@@ -62,11 +62,6 @@ ifeq ($(THIS_OS),WIN32)
   INCLUDES=/I $(INC)
   SRC_GETOPT=ya_getopt.c
   LIBS = ..\serial-sigrok\x64\Release\libserialport.lib
-
-
-
-
-
 else
   COMPILE=-c
   PATHSEP2=/
@@ -85,12 +80,6 @@ else
   LIBS += -L/usr/local/lib -lserialport
 endif
 
-SOURCES  = logsensor.c 
-SOURCES += ilidarlib.c
-OBJS_LOGSENSOR := $(SOURCES:%.c=$(BUILD)$(SLASH)%$(OBJ))
-$(info SOURCES is $(SOURCES))
-$(info OBJS_LOGSENSOR is $(OBJS_LOGSENSOR))
-
 SOURCES  = rdsensor.c 
 SOURCES += ilidarlib.c
 OBJS_RDSENSOR := $(SOURCES:%.c=$(BUILD)$(SLASH)%$(OBJ))
@@ -106,7 +95,7 @@ $(info OBJS_SENSOR2CSV is $(OBJS_SENSOR2CSV))
 
 .PHONY: directories
 
-all: directories logsensor rdsensor sensor2csv # rdsensor_t
+all: directories rdsensor sensor2csv # rdsensor_t
 
 directories: $(BIN) $(BUILD)
 
@@ -114,29 +103,13 @@ directories: $(BIN) $(BUILD)
 sensor2csv: $(OBJS_SENSOR2CSV) | $(BIN)
 	$(CC) $^ $(EXESWITCH) $(BIN)$(SLASH)sensor2csv$(EXE) $(LIBS)
 
-logsensor: $(OBJS_SENSOR2CSV) | $(BIN)
-	$(CC) $^ $(EXESWITCH) $(BIN)$(SLASH)logsnsor$(EXE) $(LIBS)
-
-rdsensor: $(OBJS_SENSOR2CSV) | $(BIN)
+rdsensor: $(OBJS_RDSENSOR) | $(BIN)
 	$(CC) $^ $(EXESWITCH) $(BIN)$(SLASH)rdsensor$(EXE) $(LIBS)
 
 
 $(BUILD)$(SLASH)%$(OBJ): $(SRC)$(SLASH)%.c | $(BUILD)
 	$(CC) $(DEFINES) $(INCLUDES) $(OBJLOC) $@ $(COMPILE) $<
 
-
-##  logsensor: $(SRC)/logsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
-##  	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)logsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
-##  		$(EXESWITCH) $(BIN)$(SLASH)logsensor$(EXE)
-##  
-##  rdsensor: $(SRC)/rdsensor.c $(SRC)/ilidarlib.c  | $(BUILD)
-##  	$(CC) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor.c $(SRC)$(SLASH)ilidarlib.c $(LIBSWITCH)$(LIBSERIAL) \
-##  		$(EXESWITCH) $(BIN)$(SLASH)rdsensor$(EXE)
-
-### rdsensor_t: $(SRC)/rdsensor_t.cpp $(SRC)/ilidarlib.c  | $(BUILD)
-### 	$(CPP) $(CPPVER) $(INCLUDES) $(OBJLOC) $(SRC)$(SLASH)rdsensor_t.cpp $(SRC)$(SLASH)ilidarlib.cpp \
-### 		$(LIBSWITCH)$(LIBSERIAL) \
-### 		$(EXESWITCH) $(BIN)$(SLASH)rdsensor_t$(EXE)
 
 $(BIN):
 	$(MKDIR) $(BIN)
@@ -145,18 +118,16 @@ $(BUILD):
 	$(MKDIR) $(BUILD)
 
 clean:
-	$(RM) $(BIN)$(SLASH)logsensor$(EXE) $(ERR2NULL)
-	$(RM) $(BIN)$(SLASH)rdsensor$(EXE) $(ERR2NULL)
 	$(RM) $(BIN)$(SLASH)sensor2csv$(EXE) $(ERR2NULL)
+	$(RM) $(BIN)$(SLASH)rdsensor$(EXE) $(ERR2NULL)
 	# $(RM) $(BIN)$(SLASH)rdsensor_t$(EXE) $(ERR2NULL)
 	$(RM) $(BUILD)$(SLASH)*.obj $(ERR2NULL)
 	$(RM) $(BUILD)$(SLASH)*.o $(ERR2NULL)
 
 exec:
 ifneq ($(THIS_OS),WIN32)
-	chmod +x $(BIN)/logsensor
-	chmod +x $(BIN)/rdsensor
 	chmod +x $(BIN)/sensor2csv
+	chmod +x $(BIN)/rdsensor
 	#chmod +x $(BIN)/rdsensor_t
 endif
 

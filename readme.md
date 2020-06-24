@@ -64,9 +64,9 @@ Clone the repository to your local machine.
 Check the `Makefile` and edit as necessary for the proper library locations
 (if applicable, check the VS2019 project file as well).
 
-*  `$ make clean`   clean output directories
-*  `$ make rdsensor`  build program `rdsensor`
-*  `$ make logsensor` build program `logsensor`
+*  `$ make clean`       clean output directories
+*  `$ make rdsensor`    build program `rdsensor`
+*  `$ make sensor2csv`  build program `sensor2csv`
 
 ## Running the programs
 
@@ -100,49 +100,6 @@ iloop:224, nf:8, seq=26817
 ...etc...
 ```
 
-
-### `logsensor`
-
-This program opens the sensor, reads data frames and every frame to file
-which is specified on the command line.  For example:
-
-
-```
-C:\files\api-demo> bin\logsensor
-Usage:
-  logsensor serial-port logfile [baud]
-  note:
-    these are the currently connected serial ports:
-    Found port: 'COM3'
-    Found port: 'COM4'
-
-C:\files\api-demo>bin\logsensor COM4 out.dat
-1500000
-baud string: 3, 1500000
-Connected to sensor, port COM4 at 1500000 baud with timeout 50000 msec
-iloop:217, nf:0, size=2904, seq=35125, datatype=f001
-iloop:218, nf:1, size=2904, seq=35126, datatype=f001
-iloop:219, nf:2, size=2904, seq=35127, datatype=f001
-iloop:220, nf:3, size=2904, seq=35128, datatype=f001
-iloop:221, nf:4, size=2904, seq=35129, datatype=f001
-iloop:222, nf:5, size=2904, seq=35130, datatype=f001
-iloop:223, nf:6, size=2904, seq=35131, datatype=f001
-iloop:224, nf:7, size=2904, seq=35132, datatype=f001
-iloop:225, nf:8, size=2904, seq=35133, datatype=f001
-iloop:226, nf:9, size=2904, seq=35134, datatype=f001
-iloop:227, nf:10, size=2904, seq=35135, datatype=f001
-iloop:228, nf:11, size=2904, seq=35136, datatype=f001
-iloop:229, nf:12, size=2904, seq=35137, datatype=f001
-iloop:230, nf:13, size=2904, seq=35138, datatype=f001
-iloop:231, nf:14, size=2904, seq=35139, datatype=f001
-iloop:232, nf:15, size=2904, seq=35140, datatype=f001
-iloop:426, nf:16, size=2904, seq=35141, datatype=f001
-iloop:427, nf:17, size=2904, seq=35142, datatype=f001
-iloop:428, nf:18, size=2904, seq=35143, datatype=f001
-...etc...
-```
-
-Both programs run for 100 frames then quit.
 
 
 

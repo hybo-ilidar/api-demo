@@ -21,11 +21,13 @@
   <ItemGroup>
     <ClCompile Include="src\ilidarlib.c" />
     <ClCompile Include="src\sensor2csv.c" />
+    <ClCompile Include="src\ya_getopt.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ilidarlib.h" />
     <ClInclude Include="include\libserialport.h" />
     <ClInclude Include="include\protocol.h" />
+    <ClInclude Include="include\ya_getopt.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
